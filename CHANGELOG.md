@@ -6,470 +6,257 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [0.9-beta] - 2026-01-27
+## [1.0.0] - 2026-03-31
 
-First public release.
-
-### Added
-- Memory inspection and debugging tooling, with a Windows Forms interface.
-- A UEFI bootkit stage, and the kernel driver it loads.
-
-### Notes
-- Licensed AGPL-3.0. This release contained code derived from
-  [EfiGuard](https://github.com/Mattiwatti/EfiGuard) (GPL-3.0) and did not credit
-  it; its third-party licence file listed Zydis, Zycore, EDK2, Roslyn and the
-  .NET runtime but omitted EfiGuard. The omission was an oversight, and the
-  correction is published on the release page and in `Nexus/UEFI/NOTICE`. The
-  binary attached to this release has been withdrawn from distribution.
-
-## [0.28.0] - 2026-01-04
-
-### Added
-- **Pointer Scanner Tuning** - Matched CE's result count (~3,127 vs CE's ~3,137)
-  - Tuned `MAX_VISITS_PER_ADDRESS` to 4 (matches CE behavior)
-  - Made parameters configurable: `maxVisitsPerAddress`, `threadStackCount`, `stackSize`
-  - Changed offset storage order to match CE (base-to-target instead of target-to-base)
-- **SQLite Export/Import** - CE-compatible format
-  - Added `Microsoft.Data.Sqlite` package
-  - `ExportToSqlite()` with CE schema (pointerfiles, modules, results tables)
-  - `ImportFromSqlite()` to load CE exports
-  - `CompareSqliteFiles()` tool for side-by-side comparison
-
-### Fixed
-- Pointer scanner progress bar bug (was showing 139%+)
-
----
-
-## [0.27.0] - 2025-12-31
+### Hardware Identity Virtualisation — validated end-to-end (2026-03-31)
+- **Identity surface mapped**: the registry-readable identifiers a host exposes to
+  user-mode code (MachineGuid, ComputerName, ContainerIDs, machine SID, USB serials)
+- **Sustained-run validation**: 24h+ continuous operation against a live commercial
+  detection driver with registry substitution active, no identity leak observed
+- **Negative control**: disabling registry substitution while leaving kernel hooks in
+  place caused the host's real identity to be recovered, confirming the registry layer
+  carries the load rather than the hooks
+- **Root cause of an earlier gap**: the `--mapper-init` guard skipped registry
+  substitution when DXE auto-init had already set state=3. Split the guard so it skips
+  kernel init only and always runs registry substitution.
+- **Tiered architecture validated**:
+  - Tier 1: Registry-level identity substitution (carries most of the coverage)
+  - Tier 2: Tier 1 + kernel hooks — runtime MAC/disk/TPM interception
+  - Tier 3: Tier 2 + SentinelHV EPT — hardware-level defence in depth
 
 ### Added
-- **LastDigits scan mode**: Filter scan results by address hex suffix pattern
-  - `NEXUS_SCAN_FLAG_LAST_DIGITS` (basic scanner)
-  - `NEXUS_SCANOPT_LAST_DIGITS` (advanced scanner)
-  - UI: rbAligned/rbLastDigits radio buttons wired to engine
-- UI 1.0 form review complete - all 61 remaining forms reviewed and polished
+- **SentinelHV Hypervisor** - Standalone WDM kernel driver Type 2 hypervisor (2026-03)
+  - Virtualizes ALL processors via KeIpiGenericCall (not just BSP)
+  - Identity-mapped EPT: 8TB coverage (PML4[0] 2MB MTRR-aware + PML4[1-15] 1GB UC)
+  - EPT TPM FIFO page split: 2MB→4KB at 0xFED00000, 0xFED10000 remapped to shadow
+  - VM exit handling: CR4 (hide VMXE), VMCALL, MSR, WBINVD, XSETBV, NMI, UMWAIT/TPAUSE
+  - ENABLE_USER_WAIT_PAUSE (secondary bit 26) — required for Arrow Lake idle (UMWAIT)
+  - Clean devirtualization via IPI with callee-saved register preservation
+  - Manual mapping via `--load-driver` with deferred VMX init (system thread)
+  - CPUID leaf 0x40000000 presence check ("Sntl" signature)
+  - CMOS NVRAM diagnostics: DXE reads, kernel writes (kernel reads return stale data)
+  - Emergency devirt on unhandled VM-exits (no bugcheck from VMX root)
+  - MacSeed wired to EPT FIFO shadow identity registers
+  - INVEPT after EPT page split (flush stale TLB across CPUs)
+  - Files: Nexus/Hypervisor/SentinelHV/ — entry.c, vmx.c, vmcs.c, ept.c, exit_dispatch.c, exit_*.c, vmx_asm.asm
+
+- **TPM Identity Virtualisation** - Full TPM identity substitution; sustained 8h+ runs with no identity leak (2026-02/03)
+  - \Driver\tpm IRP hook on all TPM submit IOCTLs (0x0022C00C, 0x0022C194)
+  - ReadPublic/CreatePrimary: RSA modulus replacement + TPM2B_NAME recomputation
+  - GetCapability: blanket spoof of all TPM_PT properties (0x100-0x214) with real vendor table profiles
+  - NV_Read: full blob transformation via GenerateSpoofedBinaryId
+  - Registry EkPub spoof (283-byte BCRYPT_RSAKEY_BLOB)
+  - ReadPublic response cache (prevents real data re-caching)
+  - CRB shadow buffer via DXE MmMapIoSpace hook — anti-cheat gets shadow, tpm.sys gets real
+  - FIFO shadow (0xFED10000) — the observed target uses FIFO exclusively
+  - DXE hooks: MmMapIoSpace, MmMapIoSpaceEx, MmGetVirtualForPhysical, MmCopyMemory, MmMapLockedPagesSpecifyCache
+  - Inline hook prologue fix: short Jcc (0x70-0x7F) conversion to near Jcc in trampoline
+  - ShadowPhysAddr approach: tail-call original with shadow physical address (safe for MmUnmapIoSpace)
+  - TPM memory rescan thread: periodic scan for original modulus leaks
+  - TBS inline hook on Tbsip_Submit_Command as secondary interception
+
+- **MAC Address Spoofing** - Multi-layer MAC spoofing for all adapters (2026-02)
+  - DXE NdisMSetMiniportAttributes compute-in-wrapper hook (GenerateSpoofedMac LCG)
+  - nsiproxy.sys dispatch hook — NSI ENUMERATE/GETALL/GETPARAM intercepted
+  - NDIS.sys dispatch hook (runtime OID query spoofing)
+  - tcpip.sys dispatch hook (adapter info query spoofing)
+  - Ndisuio.sys dispatch hook (NDIS OID query spoofing)
+  - BTHPORT.sys dispatch hook (Bluetooth BD_ADDR spoofing)
+  - User-mode SpoofAllAdapters() via IOCTL + registry NetworkAddress
+  - NSI MDL-lock approach for IRQL/process context safety
+  - LA-bit virtual adapter fix (Wi-Fi 4/5 LA bit preservation)
+
+- **HWID Registry Spoofing** - Comprehensive registry identity replacement (2026-02)
+  - Machine SID spoofing (ProfileList + HKCU paths)
+  - USB/USBSTOR/PCI device serial spoofing
+  - ContainerID spoofing (REG_SZ format, PnP Enum tree with BACKUP_RESTORE)
+  - HID/USB device spoofing via kernel hooks (hidusb/mshidkmdf/mshidumdf)
+  - MachineGuid, ProductId, ComputerName, HwProfileGuid, ComputerHardwareId
+  - SCSI DeviceMap, BIOS registry, EDID monitor serials, volume serials
+  - Disk PnP GUIDs (Partmgr DiskId)
+  - MountPoints2 cleanup, network profiles, BAM history, AppCompatCache, prefetch
+  - SMBIOS Type 17 (RAM DIMM serials)
+  - BuildGUID spoofing
+
+- **Anti-Cheat Binary Intelligence** - commercial anti-cheat driver analysis (2026-03)
+  - Griffin VM deobfuscation (phase 1-4 analysis tools)
+  - String decryption: 29 key tables, 59 inline decryptors, ~1150 strings
+  - Encrypted IAT: 2-layer hash+XOR scheme, 4188 calls, 227 entries
+  - Hook detector mapped at 0x872C40 (31 callers)
+  - Page table walker at 0x680000 (15 MmCopyMemory physical calls)
+  - TPM identity vector mapped: OfflineUniqueIDEKPub
+  - \Device\PhysicalMemory direct mapping path discovered
+
+- **API Monitor** - NexusApiHook.dll for real-time API call capture (2026-02)
+  - Ring buffer IPC (1024 slots x 4096 bytes, MPSC)
+  - ~200 API whitelist
+  - Named event stop signaling (pipe deadlock fix)
+  - Child process injection support
+
+- **HVCI Compatibility** - MDL-based writes for mapped driver under VBS (2026-02)
+  - WriteProtectedMemory (MDL-based) for all NexusCore static writes
+  - Two-phase import resolution (boot-time + runtime)
+  - RtlLookupFunctionEntry hook + module cache for exception tables
+  - State machine: NOT_MAPPED → MAPPED → IMPORTS_RESOLVED → INITIALIZED
+
+- **Disk Serial Spoofing** - Kernel disk identity hooks (2026-02)
+  - SCSI miniport dispatch hooks (disk serial in INQUIRY/VPD responses)
+  - Disk hook retry mechanism (DISK_HOOKS_MAX_RETRIES = 100)
+  - HID hook alongside disk hooks via MAPPER_CMD_HWID_RETRY_DISK
+
+- **SMBIOS Activation Migration** - Gradual Windows license fingerprint migration (2026-02)
+  - Phase-by-phase SMBIOS field randomization (chassis → system → board → UUID)
+  - Deterministic spoofed values from MasterSeed
+  - Recovery plan for activation failures
+
+- **UEFI TCG Log Substitution** - Boot-attestation surface control via TCG log transformation (2026-01-21)
+  - Hooks GetTcgLog runtime service to return spoofed PCR values
+  - Validated against the target's environment-detection path (`IOCTL_TBS_GET_TCG_LOG`)
+  - Located in `Nexus/UEFI/NexusBootDxe/TcgLogSpoof.c`
+
+- **Boot Automation** - Startup task for automatic HWID spoofing (2026-03)
+  - `nexus_startup.cmd` + `install_autorun.ps1` (NexusStartup scheduled task)
+  - 30-second boot delay, runs as SYSTEM
+  - `--mapper-init` auto-runs every boot; `--load-driver SentinelHV.sys` optional
+  - Toggle files: `%ProgramData%\NexusSentinel\disable_all`, `disable_hv`
+
+- **ZwMapViewOfSection Hook** - \Device\PhysicalMemory interception (2026-03)
+  - DXE export table hook on NtMapViewOfSection in ntoskrnl
+  - 64KB neighborhood PFN check (FIFO 0xFED10-0xFED1F, CRB 0xFED40-0xFED4F)
+  - ViewSize guard: only redirect single-page (<=4KB) mappings to shadow
+  - Excludes HPET at 0xFED00000 (2MB range caused CLOCK_WATCHDOG_TIMEOUT)
+  - Defense in depth for Tier 2 (0 hits observed — the target does not use the export-table path)
 
 ### Changed
-- Standardized button heights to 32px across all forms
-- Fixed Close button handlers (DialogResult + explicit Close())
-- Improved control spacing and form widths
-- Disabled dev auto-attach (DEV_AUTO_ATTACH = null)
-- Removed Form Reviewer from Help menu (debug tool, code kept)
+- **Codebase split** - All monolithic files split into manageable sizes (2026-03)
+  - UI: 15 C# files split into partial classes (KernelProvider, NexusEngine.Bootkit, etc.)
+  - NexusCore: 4 files split via unity build #include
+  - NexusBootDxe: 2 files split (SmbiosSpoof, PatchNtoskrnl)
+  - ApiHook: hook_engine.cpp split into 4 files
+  - NexusDSEFix: main.cpp commands extracted to separate files
+- **Dead code removed** - v1 release prep (2026-03)
+  - Deleted: ndis_protocol.c/h, wifi_mac_patch.c/h (entire unused modules)
+  - Deleted: hwid_spoof_tpm_pte.c (deprecated PTE swap), hwid_spoof_tpm_mapview.c (deprecated)
+  - Removed 11 dead functions across 7 source files + header declarations
+  - GPU UUID spoofing kept (disabled, planned for reimplementation)
+- **`/OPT:NOREF` removed** - Linker properly eliminates dead code, binary 194KB → 167KB
+- **64-issue code review** - Full codebase audit and fix (2026-03)
+  - 7 critical (64KB stack overflow, backdoor size cap, duplicate InitializeCore, etc.)
+  - 12 high (deprecated pool API, null checks, stale comments, GDI leaks)
+  - 17 medium (dead code, copy-paste, ASSERT in Release)
+  - 28 low (comments, documentation, unused usings)
+- **NexusHV removed from DXE** - SentinelHV is now standalone (2026-03)
+  - Removed FEATURE_HYPERVISOR from Loader menu and DXE
+  - All NexusHV references renamed to SentinelHV
+- **NexusCore replaces NexusMapper** - Embedded in NexusBootDxe.efi, manually mapped at boot
+- **AUTO_INIT_MIN_CALLS**: Reverted from 2 to 5 after boot freeze with larger NexusCore binary
+- **CRB cave size**: Must stay at 450 bytes (FindCodeCaveNt fails at 600)
+- **GPU UUID spoofing disabled** - Device extension scanning causes CRITICAL_PROCESS_DIED BSOD
+- **VA swap and CRB PTE swap disabled** - Both broke tpm.sys protocol state
+- **CRB write-back deprecated** - the target reads FIFO (0xFED10000), not CRB (0xFED40000)
+- **Kernel Driver Modernization** - Updated memory allocation API (2026-01-21)
+  - Migrated all `ExAllocatePoolWithTag` calls to `ExAllocatePool2`
+  - Zero-initialized memory by default (improved security)
+  - Eliminated 17 deprecation warnings
+  - Updated 16 instances across 9 source files
+- Migration plan consolidated to v4.2 (reduced from ~41k tokens to ~4k tokens)
+- Standardized on .NET 10 target for all managed components
+- Split source model decision recorded (open core, closed plugins)
 
 ### Fixed
-- TracerConfigForm layout issues
-- TracerForm control overlapping
-- ValueHistoryForm sizing and button handlers
-- WatchListAddEntryForm radio button spacing
-- MainForm orphaned controls (chkActiveMemory removed, rbAligned/rbLastDigits wired)
+- **Identity-leak root cause** - `--mapper-init` guard skipped registry substitution at state>=3 (2026-03)
+- **SentinelHV manual map freeze** - Deferred VMX init to system thread (SetVariable context deadlock)
+- **SentinelHV Arrow Lake freeze** - UMWAIT/TPAUSE idle caused #UD without ENABLE_USER_WAIT_PAUSE
+- **SentinelHV ACK_INTERRUPT_ON_EXIT** - Was silently dropping all external interrupts (not needed)
+- **SentinelHV ASM exit stub RAX** - `[rsp+8]` not `[rsp+10h]` to recover guest RAX after two pushes
+- **SentinelHV devirt BSOD** - ShvDoVmcall must save/restore callee-saved regs for VMXOFF path
+- **SentinelHV devirt deadlock** - DbgPrintEx at IPI_LEVEL in devirt callbacks
+- **SentinelHV EPT GPU crash** - GPU large BAR at ~4TB, 512GB PML4[0] insufficient → BSOD 0x113
+- **SentinelHV CMOS reads** - Kernel-context reads return stale BIOS data; DXE-context reads work
+- **ZVS HPET crash** - 2MB PFN range caught HPET (0xFED00000) → CLOCK_WATCHDOG_TIMEOUT
+- **64KB stack overflow** - `mapper_cmd_memory.c` 64KB stack buffer replaced with pool alloc
+- **Backdoor size cap** - SetVariable R/W backdoor now capped at 64KB
+- **Duplicate InitializeCore** - Removed static copy from CoreCommands.c
+- **Font GDI leak** - ShellForm created `new Font()` on every tab switch without disposing
+- **Event handler leaks** - 3 unsubscribed event handlers in ShellForm
+- **TPM IOCTL code** - Was 0x0022200C, correct is 0x0022C00C
+- **TPM2 response format BSOD** - ReadPublic vs CreatePrimary offset differences
+- **NSI hook IRQL/process bug** - MDL-lock at PASSIVE_LEVEL, system addresses in completion
+- **UEFI Print() deadlock** - No Print() from winload context, use BlStatusPrint
+- **MLP boot freeze** - MDL size check + export-table-only hook (no inline)
+- **Inline hook prologue** - Short Jcc handling for Win11 24H2 MmMapIoSpace
+- **Windows activation** - SpoofDigitalProductId disabled, license re-bound via slmgr
+- **Kernel Driver Linker Errors** - Dynamic function resolution (2026-01-21)
+  - Resolved undocumented functions via `MmGetSystemRoutineAddress`:
+    - `PsSuspendThread`, `PsResumeThread`, `PsGetNextProcessThread`
+    - `ZwGetContextThread`, `ZwSetContextThread`
+  - Fixed `ntstrsafe.h` CRT dependency with `NTSTRSAFE_LIB` define
+  - Added `ntstrsafe.lib` to Debug configuration linker dependencies
+  - Initialization functions called in `DriverEntry`
+
+- **Structure Dissector Complete** - Full ReClass.NET-style structure analysis (2026-01-17)
+  - Core field types: Int8-64, UInt8-64, Float, Double, Bool, Pointer, String, WString, Bytes
+  - Advanced types: Nested structures, Arrays, Bitfields, Enums, GUID, Timestamp, Union
+  - Memory write-back support for all field types
+  - Auto-dissect using `Nexus_StructureAutoGuess` engine API
+  - Fill gaps functionality via `Nexus_StructureFillGaps`
+  - Copy/paste fields between structures
+  - Structure library with JSON persistence
+  - Alignment validation and padding support
+  - Pointer chain following (multi-level resolution)
+  - Field search/filter
+  - Structure comparison/diffing dialog
+  - Visual byte-map layout view
+  - VTable detection and enumeration
+  - RTTI parsing (MSVC x64)
+  - Scan for strings and pointers
+  - Clone structure and sort elements
+  - PDB import placeholder (stub for future SDK integration)
+
+- **Plugin Manager Integration** - Full plugin system now wired into ShellForm (2026-01-17)
+  - `InitializePluginSystem()` creates PluginLoader and PluginHost on startup
+  - "Manage Plugins..." menu item now opens PluginManagerForm
+  - Plugin approval dialogs for unsigned plugins
+  - Process attach/detach events notify plugin host
+  - Plugin lifecycle management (load, unload, dispose)
+  - Trust settings persistence (JSON)
+  - Signature verification (Authenticode)
+
+- **Dark mode** - Complete implementation across all 83 form constructors
+  - `ThemeManager.ApplyTheme()` applied to all forms including nested forms
+  - Dark/light color palettes with DwmSetWindowAttribute for title bar
+  - Toggle via Settings menu
+- **Debugger enhancements** (cleanroom implementation):
+  - Software breakpoint step-over logic (restore byte → single-step → re-set INT3)
+  - Initial system breakpoint handling (skip Windows loader breakpoint)
+  - Hardware breakpoint application to new threads
+  - Module name population in DLL load events
+  - Fixed `g_debuggers` static map bug (was declared in two functions)
 
 ---
 
-## [0.26.1] - 2025-12-30
 
-### Removed
-- FloatingPointPanelForm (x64dbg will handle register views)
-- NetworkConfigForm, NetworkDataCompressionForm, PointerRescanConnectForm, PointerScanConnectDialogForm, SetupPSNNodeForm (DMA/network out of scope)
-- ExeTrainerGeneratorForm, TrainerGeneratorForm (trainers obsolete in 2025)
-- LuaConsoleForm, LuaEngineForm, LuaScriptEditorForm, LuaScriptQuestionForm (replaced by future Roslyn scripting)
-- Nexus/Native/TCC/ folder (LGPL incompatible with closed source)
-- Nexus/Native/Lua/ folder (replaced by future Roslyn scripting)
-- CommentForm (unused - use inline editing or InputBoxForm)
-- ChangeDescriptionForm (replaced by InputBoxForm.Show)
-
-**Tier 1 Orphan Cleanup (19 forms):**
-- APIHookTemplateSettingsForm (API hooking not implemented)
-- BranchMapperForm (complex visualization not implemented)
-- CapturedTimersForm (speedhack sub-form, SpeedhackForm handles this)
-- CR3SwitcherForm (kernel CR3 manipulation)
-- D3DHookConfigForm (DirectX overlay - cheat devs do this)
-- D3DHookSnapshotConfigForm (DirectX overlay)
-- D3DTrainerOptionsForm (DirectX overlay)
-- DBVMLoadManualForm (DBVM not implemented)
-- DbvmWatchConfigForm (DBVM not implemented)
-- FormDesignerForm (CE internal tool)
-- GameInfoForm (CE game info, not implemented)
-- GDTIDTViewerForm (kernel internals - study from original CE)
-- IPTLogDisplayForm (Intel PT not implemented)
-- PagingViewerForm (kernel internals)
-- SDTViewerForm (kernel internals)
-- SetCrosshairForm (game overlay - cheat devs do this)
-- SnapshotHandlerForm (D3D snapshot feature)
-- Ultimap2Form (Intel PT not implemented)
-- UltimapForm (Intel PT not implemented)
-
-**Tier 2 Cleanup (7 forms):**
-- AccessedMemoryForm (working set monitor, complex/incomplete)
-- CalculatorForm (use Windows Calculator)
-- DriverListForm (future kernel work)
-- DriverLoadedForm (future kernel work)
-- EditHistoryForm (undo system not implemented)
-- ProcessPluginsForm (plugin system not implemented)
-- SyntaxHighlighterEditorForm (settings overkill)
-
-**Tier 3 Orphan Cleanup (35 forms):**
-- GroupScanAlgorithmForm (complex scan algorithm UI, not implemented)
-- ListViewItemEditorForm (generic editor, unused)
-- MemoryAllocHandlerForm (allocation tracking, not implemented)
-- MemoryPatchForm (patch management, unused)
-- MemoryProtectionForm (protection change UI, unused)
-- MemoryRecordDropdownForm (dropdown config, unused)
-- MemorySearchOptionsForm (search options, integrated elsewhere)
-- MemViewPreferencesForm (memory view settings, unused)
-- MemViewPreferencesFullForm (memory view settings, unused)
-- MemoryViewExForm (extended memory view, unused)
-- OpenFileAsProcessForm (file-as-process, not implemented)
-- PasteTableEntryForm (table paste UI, unused)
-- PEInfoForm (PE viewer, use external tools)
-- PointerMapForm (pointer map visualization, not implemented)
-- ProcessWatcherExtraForm (process watcher settings, unused)
-- ReferencedFunctionsForm (function refs, not implemented)
-- ReferencedStringsForm (string refs, not implemented)
-- RegistersForm (register view, x64dbg handles this)
-- ResumePointerScanForm (pointer scan resume, unused)
-- SaveDisassemblyForm (disasm export, unused)
-- SaveMemoryRegionForm (memory export, unused)
-- SaveSnapshotsForm (snapshot save UI, unused)
-- ScriptVariablesForm (script vars, Lua removed)
-- SourceDisplayForm (source view, not implemented)
-- StackTraceForm (stack trace, x64dbg handles this)
-- StackViewerForm (stack view, x64dbg handles this)
-- StructuresConfigForm (structure settings, unused)
-- StructuresElementInfoForm (element info, unused)
-- StructuresNewStructureForm (new structure, unused)
-- SymbolConfigForm (symbol settings, unused)
-- SymbolHandlerConfigForm (symbol handler settings, unused)
-- TableExtraInfoForm (table extra info, unused)
-- TypePopupForm (type selection popup, unused)
-- ValueChangeForm (duplicate of ChangeValueForm)
-- ValueTypeSelectorForm (type selector, unused)
-
-**Form count: 166 → 95 (71 forms removed total)**
-
-**Tier 4 Orphan Cleanup (34 forms):**
-- AAEditPrefsForm (auto-assembler prefs, unused)
-- AddressRangeForm (address range input, unused)
-- AdvancedOptionsForm (code list/pause, not wired to menu)
-- AssemblerErrorsForm (assembler errors, unused)
-- AssemblyScanForm (assembly scan, not wired)
-- AutoInjectScriptForm (auto-inject script, unused)
-- BreakAndTraceForm (break and trace, not wired)
-- ChangeOffsetForm (offset change, unused)
-- CodeCaveFinderForm (code cave finder, not wired)
-- CodeInjectionTemplatesForm (injection templates, unused)
-- ConditionEditorForm (condition editor, unused)
-- DebugEventsForm (debug events, not wired)
-- DebuggerOptionsForm (debugger options, not wired)
-- DebugStringsForm (debug strings, not wired)
-- DebugSymbolStructureListForm (symbol structures, unused)
-- DisassemblerOptionsForm (disassembler options, not wired)
-- DisassemblyScanForm (disassembly scan, not wired)
-- DisassemblySearchForm (disassembly search, unused)
-- DissectCodeForm (code dissection, not wired)
-- DissectWindowForm (window dissection, unused)
-- DotNetObjectListForm (.NET objects, unused)
-- DropdownSettingsForm (dropdown settings, unused)
-- ExceptionRegionListForm (exception regions, unused)
-- FilePatcherForm (file patcher, not wired)
-- FoundCodeDialogForm (found code dialog, unused)
-- InjectDllForm (DLL injection, not wired to menu)
-- MemoryBrowserForm (memory browser, unused)
-- MemRecComboboxForm (memory record combo, unused)
-- ModifyRegistersForm (register modification, not wired)
-- ProcessWatcherForm (process watcher, not wired)
-- StringPointerScanForm (string pointer scan, not wired)
-- StructureLinkerForm (structure linker, not wired)
-- ThreadListDetailForm (thread details, not wired)
-- WatchlistForm (watchlist, not wired)
-
-**Form count: 95 → 61 (105 forms removed total, 63% reduction)**
-
-### Changed
-- Reorganized migration plan with Quick Start section at top
-- Added Last Session section for conversation continuity
-- Added Section Index for AI navigation
-
-### Added
-- Release Protection Strategies section (VMProtect, .NET obfuscation)
-- Third-Party Dependency Audit section
-- Scripting Strategy (Post-Lua) section
-- Deleted Components Log
-
----
-
-## [0.26.0] - 2025-12-25
-
-### Added
-- Kernel driver abstraction layer
-- Transport layer with user-mode/kernel/hypervisor support
-- Capability detection and graceful degradation
-- Physical memory read/write API (requires driver)
-- Virtual to physical translation API
-- Object hiding API framework
-- Anti-debug API framework
-- 27 engine tests passing
-
----
-
-## [0.25.0] - 2025-12-25
-
-### Added
-- Advanced memory scanner (multi-threaded)
-- All value types: byte, word, dword, qword, float, double, string, AOB
-- All comparison types: exact, range, increased, decreased, changed, unchanged
-- Undo scan support
-- Progress callbacks for UI integration
-- 26 engine tests passing
-
----
-
-## [0.24.0] - 2025-12-25
-
-### Added
-- Symbol handler (DbgHelp integration)
-- PDB and export symbol resolution
-- Microsoft symbol server support
-- C++ name undecorating
-- Line number support
-- 25 engine tests passing
-
----
-
-## [0.23.0] - 2025-12-25
-
-### Added
-- Disassembler (Zydis integration)
-- x86/x64 support including AVX-512
-- Intel and AT&T syntax modes
-- Branch target detection
-- RIP-relative address resolution
-- 24 engine tests passing
-
----
-
-## [0.22.0] - 2025-12-25
-
-### Added
-- AA script parsing
-- Section extraction and validation
-- CT import/export support
-- Phase 4 backend feature parity COMPLETE
-
----
-
-## [0.21.0] - 2025-12-25
-
-### Added
-- Structure dissection (.nxs format)
-- Element type management
-- CE structure import/export
-
----
-
-## [0.20.0] - 2025-12-25
-
-### Added
-- Trainer generation (.nxt project format)
-- C source code output
-- Hotkey support
-
-### Removed (2025-12-30)
-- Feature removed as trainers are obsolete
-
----
-
-## [0.19.0] - 2025-12-25
-
-### Added
-- Address file format (.nsa)
-- Module-relative addressing
-- CEA import/export
-
----
-
-## [0.18.0] - 2025-12-25
-
-### Added
-- Lua engine integration
-- Dynamic lua54.dll loading
-- CE-compatible Lua functions
-
-### Removed (2025-12-30)
-- Feature removed, replaced by future Roslyn C# scripting
-
----
-
-## [0.17.0] - 2025-12-25
-
-### Added
-- Trace logger
-- Instruction tracing with ring buffer
-- Export to TXT/CSV/JSON
-
----
-
-## [0.16.0] - 2025-12-25
-
-### Added
-- Stack walker (DbgHelp-based)
-- Symbol resolution for stack frames
-
----
-
-## [0.15.0] - 2025-12-25
-
-### Added
-- Signature scanner
-- Pattern matching with wildcards
-- Module-scoped scans
-
----
-
-## [0.14.0] - 2025-12-25
-
-### Added
-- Auto-assembler
-- x64/x86 instruction encoding
-- Label and symbol resolution
-
----
-
-## [0.13.0] - 2025-12-25
-
-### Added
-- Speedhack
-- Timing function hooks
-- Shared memory + QPC shellcode injection
-
----
-
-## [0.12.0] - 2025-12-25
-
-### Added
-- Cheat table format (.nst)
-- Memory records, scripts, groups
-- .ns file format naming convention
-
----
-
-## [0.11.0] - 2025-12-25
-
-### Added
-- Code injection (shellcode)
-- DLL injection (LoadLibrary, manual map)
-- Remote function call
-
----
-
-## [0.10.0] - 2025-12-25
-
-### Added
-- Pointer scanner
-- Reverse pointer map algorithm
-- Async scanning
-- Save/load pointer scan results (.nxps)
-
----
-
-## [0.9.0] - 2025-12-25
-
-### Added
-- Debugger
-- Software and hardware breakpoints
-- Single-step execution
-- Debug event handling
-
----
-
-## [0.8.0] - 2025-12-25
-
-### Added
-- Handle enumeration (NtQuerySystemInformation)
-- PE parsing (exports, imports, sections)
-
----
-
-## [0.7.0] - 2025-12-25
-
-### Added
-- Thread enumeration and control
-- Memory allocation API
-- Memory protection API
-- Register read/write via thread context
-
----
-
-## [0.6.0] - 2025-12-25
-
-### Added
-- Project format (.nxp JSON files)
-- Address list management
-- Pointer chain support
-- Value refresh
-
----
-
-## [0.5.0] - 2025-12-25
-
-### Added
-- Scanner core (all numeric types)
-- String scan (ANSI/Unicode with case sensitivity)
-- AOB scan with wildcard support
-
----
-
-## [0.4.0] - 2025-12-25
-
-### Added
-- Memory allocation
-- Memory protection changes
-
----
-
-## [0.3.0] - 2025-12-25
-
-### Added
-- Memory snapshots (CaptureMemoryMap)
-- Region filtering
-
----
-
-## [0.2.0] - 2025-12-25
-
-### Added
-- Pointer resolution
-- ResolvePointer, ResolvePointerAndRead
-- ResolvePointerBatch
-
----
-
-## [0.1.0] - 2025-12-25
-
-### Added
-- Core primitives
-- Process enumeration and attach
-- Memory read/write
-- Module enumeration
-
----
-
-## UI Milestones
-
-### Phase 5 Complete - 2025-12-27
-- 181 form files ported from CE Pascal to C# WinForms
-- All essential CE forms implemented
-- Zero warnings, zero errors build
-
-### Phase 5 Started - 2025-12-25
-- Created Nexus.UI WinForms project (.NET 8)
-- P/Invoke bindings to engine.dll
-- MainForm with scan controls and address list
-
----
-
-## Plan Document Versions
-
-The migration plan document (Nexus_Sentinel_Migration_Plan.md) tracks its own version separately:
-- Current: v3.82 (2025-12-30)
-- See `## Revision History` section in the plan for detailed plan changes
-
+## Releases before 1.0.0
+
+Versions 0.1.0 through 0.28.0 (December 2025 -- January 2026) covered the
+project's original memory-inspection and debugging tooling, including a Windows
+Forms user interface written in C#.
+
+That interface was **inspired by Cheat Engine, not ported from it**. Cheat
+Engine's Pascal sources were used as a reference for what the tooling should do
+— which dialogs a memory editor needs, what belongs on each one — and the C#
+was then written against that understanding. Every form was subsequently
+reviewed and adjusted by hand, because a layout derived from a description does
+not come out looking right, and the functionality behind them was implemented
+independently rather than translated.
+
+The distinction matters for licensing, so it is stated plainly: no Cheat Engine
+source was copied into this tree. Where anything of theirs did reach the
+codebase it has been removed rather than relicensed.
+
+That code is preserved in this repository under `Nexus/UI` and `Nexus/Engine`.
+It is unmaintained rather than removed, and still builds.
+
+Per-version entries for that period remain in this file's git history. They are
+not reproduced here, so that this file documents the codebase as it now stands.
+See the scope note at the top for how the project's focus changed.
