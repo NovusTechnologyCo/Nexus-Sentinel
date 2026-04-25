@@ -6,6 +6,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.1.0] - 2026-04-25
+
+### Added
+- **EPT read-trapping extended to the TPM CRB window** (0xFED40000) alongside
+  the existing FIFO trap.
+- `--ept-hook`, with CPUID-based virtual-to-physical resolution for hook
+  installation.
+- GPA-matched EPT switching, dormant until hooks are installed.
+- Multi-snapshot process dumper.
+- TPM registry access logging in the kernel callback.
+
+### Fixed
+- Use-after-free in the snapshot dumper.
+
+---
+
 ## [1.0.0] - 2026-03-31
 
 ### Hardware Identity Virtualisation — validated end-to-end (2026-03-31)
