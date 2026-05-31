@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.0] - 2026-05-31
+
+### Added
+- Preloader ASLR mode -- runs the preloader at the real hardware ASLR base.
+- Read-tracking instrumentation with JSON export.
+- Recon mode with module-name resolution from a base address.
+
+### Fixed
+- `MmIsAddressValid` correctness in NexusCore, rebuilt into the DXE image.
+
+---
+
 ## [1.1.0] - 2026-04-25
 
 ### Added
