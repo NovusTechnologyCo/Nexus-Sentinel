@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.3.0] - 2026-06-30
+
+### Added
+- Emulation chain (`emu_chain`), including runtime-decrypted image loading and
+  cooperative-thread scheduling flags.
+- Diagnostic runbook for the verdict path.
+
+### Notes
+- Offline decryption was established as a dead end; the capture-based approach
+  replaced it.
+
+---
+
 ## [1.2.0] - 2026-05-31
 
 ### Added
