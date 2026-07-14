@@ -6,6 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.4.0] - 2026-07-14
+
+### Added
+- Per-stage pipeline timing instrumentation.
+- Intra-module analysis parallelism (`--fn-slice k/N`), verified as a clean
+  partition.
+- Split-function reassembler in the microcode inliner.
+
+### Changed
+- Three duplicate build orchestrators consolidated into one.
+
+---
+
 ## [1.3.0] - 2026-06-30
 
 ### Added
