@@ -6,6 +6,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.4.1] - 2026-07-21
+
+### Added
+- Signature-based mbedTLS function namer that generalises across target builds.
+- `corpus_quality_report` -- instrumentation for analysis-corpus cleanliness.
+
+### Notes
+- Measured trade-off in the rebuild: functions under 1 KB resolve 3.4x cleaner,
+  while functions above that regress. Recorded rather than papered over.
+
+---
+
 ## [1.4.0] - 2026-07-14
 
 ### Added
