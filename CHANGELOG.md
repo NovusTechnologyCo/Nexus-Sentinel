@@ -6,6 +6,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.5.0] - 2026-07-25
+
+Final v1 release. The v1 tree is archived immediately after this point and the
+v2 base is installed from upstream.
+
+### Added
+- `--callee-anchor` capture anchor, which can see static-import `DllMain` paths.
+
+### Fixed
+- A refused hardware-identity query is no longer reported as a real reading.
+- DXE no longer clears `CR4.CET` -- the measured cause of a 0xEF bugcheck.
+- Hypervisor status query no longer bugchecks.
+
+---
+
 ## [1.4.1] - 2026-07-21
 
 ### Added
