@@ -6,6 +6,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.0.0-alpha.1] - 2026-08-01
+
+### Added
+- **v2 base rebuilt on upstream EfiGuard.** DXE and Loader both build from the
+  upstream tree rather than a divergent fork.
+- Execute breakpoints verified on silicon.
+
+### Removed
+- v1 UEFI layers archived out of the build. The v1 tree is preserved in
+  the private research repository and is no longer built from this repository.
+- PE32, WIM and legacy BIOS paths cut -- Windows 11 25H2+ only.
+- 110 MB of unused EDK2 and desktop libraries dropped from the UEFI link line.
+
+### Fixed
+- Two buffer overruns in `util.c`.
+
+---
+
 ## [1.5.0] - 2026-07-25
 
 Final v1 release. The v1 tree is archived immediately after this point and the
