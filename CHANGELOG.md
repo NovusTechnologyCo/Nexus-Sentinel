@@ -6,6 +6,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.0.0-alpha.2] - 2026-08-21
+
+### Added
+- Breakpoint dispatch and IDT instrumentation on the v2 base.
+
+### Fixed
+- Long-run stability: 26,000 commands clean on the corrected interrupt-ownership
+  build.
+
+### Notes
+- Several throughput figures were withdrawn after they proved to have been
+  measured against an inert filter.
+
+---
+
 ## [2.0.0-alpha.1] - 2026-08-01
 
 ### Added
