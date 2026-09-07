@@ -6,6 +6,25 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.0.0-alpha.3] - 2026-09-07
+
+### Added
+- **Software TPM transport** -- RAM-backed CRB transport published through the ACPI
+  namespace, which the Windows TPM driver binds against. Gives an analysis
+  environment a synthetic TPM without physical hardware.
+- Secure Boot state presentation, measured against the platform's own ACPI
+  namespace rather than assumed from specification text.
+
+### Changed
+- EK certificate presentation defaults to on, with an opt-out for scenarios that
+  need real attestation.
+
+### Notes
+- Project scope restated: malware analysis, with the hardware-identity subsystem
+  serving analysis-environment hardening.
+
+---
+
 ## [2.0.0-alpha.2] - 2026-08-21
 
 ### Added
