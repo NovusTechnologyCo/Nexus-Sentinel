@@ -6,6 +6,35 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [2.0.0-alpha.4] - 2026-09-09
+
+### Added
+- **Software TPM 2.0 -- the command layer.** One command dispatcher shared by the
+  DXE and the in-kernel CRB servicer, covering the object, NV, PCR and capability
+  groups: `TPM2_CreatePrimary`, `TPM2_Create`, `TPM2_Load`, `TPM2_FlushContext`,
+  `TPM2_EvictControl`, `TPM2_PCR_Read`, `TPM2_PCR_Extend`, the `TPM2_NV_*` family,
+  and `TPM2_GetCapability` across `TPM_CAP_COMMANDS`, `TPM_CAP_ALGS`,
+  `TPM_CAP_PCRS`, `TPM_CAP_HANDLES` and the `PT_FIXED` / `PT_VAR` property groups.
+- **Cryptography written from the specification.** Big-integer arithmetic,
+  RSA-2048 key generation, KDFa, and AES with CFB mode. Each layer is tested
+  against an independent implementation rather than against itself.
+- **Persistent primary seeds.** The seeds live in NVRAM, so a primary key derived
+  before a reboot derives identically after one.
+- **A verification layer.** The implementation is queried for everything the
+  specification defines, not only for what the operating system asks, and the
+  answers are compared against a capture of genuine hardware.
+
+### Fixed
+- `tpm.sys` now binds. The ACPI TPM2 table revision was the blocker, not the
+  interface type.
+- Two response codes were wrong, and the test asserting them agreed with the
+  mistake.
+
+### Notes
+- Measured against a captured hardware reference throughout. Several hypotheses
+  recorded while the work was in progress were refuted by that reference; they
+  are corrected here rather than quietly dropped.
+
 ## [2.0.0-alpha.3] - 2026-09-07
 
 ### Added
