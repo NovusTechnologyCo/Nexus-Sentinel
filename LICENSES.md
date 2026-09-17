@@ -1,27 +1,41 @@
 # Licensing
 
-Nexus Sentinel is licensed **per component**, not as a single blanket work. The
-components ship as separate binaries with no in-process linkage between them, so
-each carries the licence its own provenance requires.
+**Nexus Sentinel is Apache 2.0 throughout.** See the `LICENSE` file at the
+repository root.
 
-| Component | Licence | Why |
-|---|---|---|
-| `Nexus/Drivers/`, `Nexus/Kernel/`, `Nexus/Native/`, `Nexus/Usermode/`, `Nexus/UserHook/`, `Nexus/Engine/`, `Nexus/UI/`, tooling, docs | **Apache 2.0** (root `LICENSE`) | Original work. All vendored third-party code in these trees is permissive (BSD/MIT). |
-| `Nexus/UEFI/` | **GPL-3.0** (`Nexus/UEFI/LICENSE`) | Derivative of EfiGuard (GPLv3). See `Nexus/UEFI/NOTICE`. |
+That is a change. Until 17 September 2026 this project was licensed per
+component, because `Nexus/UEFI/` was a derivative work of EfiGuard and therefore
+GPL-3.0 while everything else was Apache 2.0. `Nexus/UEFI/` no longer contains
+derivative code, so the split has no reason to exist and is gone.
 
-## Why the boundary holds
+`Nexus/UEFI/NOTICE` records what was replaced and when.
 
-`Nexus/UEFI/` builds to standalone UEFI images (`.efi`) loaded by firmware. It
-communicates with the kernel driver across a firmware/OS boundary through the
-protocol declared in `Nexus/UEFI/Include/Protocol/NexusBoot.h` — separate
-binaries, separate address spaces, separate load events. GPLv3's copyleft
-applies to that work; it does not reach the separately-distributed driver and
-user-mode components.
+## What that changed, concretely
 
-**The same rule governs the emulator.** NexusForge and NexusForge-Core are
-GPL-2.0 (QEMU-derived) and are *permanently* GPL-2.0 — QEMU as a whole work is
-GPLv2, so no future cleanup can change it. GPL-2.0 is incompatible with both
-Apache-2.0 and GPL-3.0, which means:
+The GPL-3.0 boundary ran along a directory, not along the code inside it — so it
+also covered `Nexus/UEFI/NexusTpmDxe/`, the TPM 2.0 implementation, which is
+original work and was only ever copylefted by sharing a build with the
+derivative files. Both compile into the same `.efi`, which made them one work.
+Removing the derivative half is what separated them.
+
+## Versions
+
+| Versions | Licence |
+|---|---|
+| up to and including `v2.0.0-alpha.4` | **GPL-3.0** for `Nexus/UEFI/`, Apache 2.0 elsewhere |
+| `v2.0.0-beta.1` and later | **Apache 2.0** throughout |
+
+Nothing here withdraws or alters rights granted with earlier releases. GPLv3
+grants are irrevocable, and anyone who obtained those versions keeps them under
+the terms they were published with. The `v2.0.0-alpha.3` and `v2.0.0-alpha.4`
+artifacts have been withdrawn from distribution — which stops the project
+distributing them, and does not and cannot reach copies already taken.
+
+## The emulator boundary still holds, and is not negotiable
+
+NexusForge and NexusForge-Core are GPL-2.0 (QEMU-derived) and are *permanently*
+GPL-2.0 — QEMU as a whole work is GPLv2, so no future cleanup can change it.
+GPL-2.0 is incompatible with Apache 2.0, which means:
 
 > **Nexus Sentinel must never import, link, or in-process load NexusForge or
 > NexusForge-Core.** Data may flow between them — Sentinel writes capture
@@ -29,29 +43,33 @@ Apache-2.0 and GPL-3.0, which means:
 > the only configuration in which these projects can legally coexist.
 
 Forge consuming a Sentinel capture file creates no obligation in either
-direction. Linking would.
+direction. Linking would. This was true under the old per-component licensing
+and is equally true now; if anything it matters more, since Apache 2.0 and
+GPL-2.0 are incompatible in a way Apache 2.0 and GPL-3.0 were not.
 
 ## Third-party components
 
-All permissive; none imposes copyleft on the Apache-2.0 trees.
+All permissive; none imposes copyleft on this project.
 
 | Component | Location | Licence |
 |---|---|---|
 | HDE64 (Vyacheslav Patkov) | `Nexus/Drivers/NexusCore/hde/` | BSD-2-Clause (`LICENSE`) |
 | MinHook (Tsuda Kageyu) | `Nexus/Native/ApiHook/minhook/` | BSD-2-Clause (`LICENSE.txt`) |
-| Zydis (Florian Bernd, Joel Höner) | `Nexus/Engine/third_party/`, `Nexus/UEFI/SDK/Zydis/` | MIT (`LICENSE.Zydis`) |
-| EDK2 (Intel / TianoCore) | `Nexus/UEFI/SDK/EDK2/` | BSD-2-Clause-Patent |
-| EfiGuard (Mattiwatti) | `Nexus/UEFI/NexusBootDxe/` | **GPL-3.0** — see `Nexus/UEFI/NOTICE` |
+| Zydis / Zycore (Florian Bernd, Joel Höner) | `Nexus/Engine/third_party/`, `Nexus/UEFI/SDK/Zydis/` | MIT (`LICENSE`) |
+| EDK2 (Intel / TianoCore) | `Nexus/UEFI/SDK/EDK2/` | BSD-2-Clause-Patent (`LICENSE`) |
 
 ## History
 
-Earlier revisions of this repository carried a single AGPL-3.0 licence with a
-commercial dual-licensing offer. That was retired in September 2026: the
-plugin-sales model it existed to support was never realised, and dual licensing
-requires sole ownership of the whole work, which the EfiGuard-derived UEFI tree
-made impossible. Per-component licensing states the actual position accurately
-and leaves more commercial room, not less.
+Earlier revisions carried a single AGPL-3.0 licence with a commercial
+dual-licensing offer. That was retired in September 2026: the plugin-sales model
+it existed to support was never realised, and dual licensing requires sole
+ownership of the whole work, which the EfiGuard-derived UEFI tree made
+impossible. It was replaced by per-component licensing, which stated the actual
+position accurately while that derivation existed.
 
-`CLA.md` existed to support that dual-licensing model. Under Apache 2.0,
+With the derivation gone, sole ownership holds again and a single Apache 2.0
+licence states the position more simply than the table it replaces.
+
+`CLA.md` existed to support the dual-licensing model. Under Apache 2.0,
 contributions are covered by section 5 of the licence itself; the CLA is
-retained for reference but is no longer required for the Apache-2.0 components.
+retained for reference but is not required.

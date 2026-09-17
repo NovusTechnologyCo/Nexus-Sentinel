@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <!-- Zero-warning policy: treat all warnings as errors -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+
+    <!-- x64 only - must match engine.dll -->
+    <PlatformTarget>x64</PlatformTarget>
+    <Platforms>x64</Platforms>
+
+    <!-- High DPI mode via code instead of manifest -->
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+
+    <!-- Application metadata -->
+    <AssemblyName>Nexus</AssemblyName>
+    <RootNamespace>Nexus.UI</RootNamespace>
+    <ApplicationIcon>Resources\logo.ico</ApplicationIcon>
+    <Version>1.0.0</Version>
+    <Company>Nexus Project</Company>
+    <Product>Nexus Sentinel</Product>
+    <Description>Advanced System Introspection Framework</Description>
+
+    <!-- Output to shared bin folder -->
+    <OutputPath>..\bin\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+
+    <!-- Windows-specific settings -->
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- Keep only English localization to reduce output folder clutter -->
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- Only include Windows x64 runtime assets -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Native DLL reference - engine.dll will be in same directory -->
+    <None Update="engine.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- API hook DLLs - copy from Native build output if present -->
+    <None Include="..\Native\ApiHook\bin\Release\NexusApiHook.dll"
+          Condition="Exists('..\Native\ApiHook\bin\Release\NexusApiHook.dll')"
+          Link="NexusApiHook.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\Native\ApiHook\bin\Release\NexusApiHook32.dll"
+          Condition="Exists('..\Native\ApiHook\bin\Release\NexusApiHook32.dll')"
+          Link="NexusApiHook32.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Roslyn for C# scripting engine -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Resource files -->
+    <None Remove="Resources\**" />
+    <EmbeddedResource Include="Resources\**" />
+  </ItemGroup>
+
+</Project>

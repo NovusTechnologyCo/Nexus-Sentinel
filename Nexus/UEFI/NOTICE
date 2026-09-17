@@ -1,0 +1,77 @@
+Nexus UEFI (NexusBootDxe, NexusTpmDxe, Loader)
+Copyright (c) 2024-2026 Novus Technology.
+
+================================================================================
+LICENCE: Apache License 2.0
+================================================================================
+
+This tree is original work by Novus Technology and is licensed under the Apache
+License, Version 2.0, the same as the rest of Nexus Sentinel. See the LICENSE
+file at the repository root.
+
+--------------------------------------------------------------------------------
+Licence history -- this directory was GPL-3.0 until 2026-09-17
+--------------------------------------------------------------------------------
+
+Earlier revisions of Nexus/UEFI/ were a derivative work of EfiGuard
+(https://github.com/Mattiwatti/EfiGuard, GPL-3.0) and were distributed under
+GPL-3.0 accordingly. That obligation was real and was met: the derivation was
+declared, upstream was credited, and the modified files were listed as GPLv3
+section 5(a) requires.
+
+Every EfiGuard-derived file has since been replaced with an independent
+implementation or removed outright:
+
+  pe.c, pe.h                   -> NexusPe.c, NexusPe.h
+  util.c, util.h               -> NexusUtil.c, NexusUtil.h
+  ntdef.h                      -> NexusNt.h
+  arc.h                        -> NexusArc.h
+  X64/Cet.asm, X64/Cet.nasm    -> X64/NexusCet.asm, X64/NexusCet.nasm
+  VisualUefi.c                 -> NexusVisualUefi.c
+  PatchNtoskrnl.c              -> rewritten
+  PatchWinload.c               -> rewritten
+  PatchBootmgr.c               -> rewritten
+  byte-signature scanning      -> NexusPgLocate.c, NexusBootLocate.c
+  inline hooking               -> NexusHook.c
+  loader-block helpers         -> NexusLoaderBlock.c
+  the DSE bypass and the
+  SetVariable kernel R/W
+  backdoor                     -> removed; neither is used
+
+The driver protocol GUID was reissued at the same time, because an inherited
+identifier is inherited regardless of what the code behind it says.
+
+VERSIONS THIS APPLIES TO. Releases up to and including v2.0.0-alpha.4 contain
+EfiGuard-derived code and remain licensed under GPL-3.0; nothing here withdraws
+or alters the rights granted with them. v2.0.0-beta.1 and later contain no
+derivative code and are Apache-2.0.
+
+--------------------------------------------------------------------------------
+Correction to v0.9-beta
+--------------------------------------------------------------------------------
+
+The v0.9-beta release (January 2026) contained EfiGuard-derived code and did NOT
+credit it. That release was published under AGPL-3.0, and its third-party
+licence file listed Zydis, Zycore, EDK2, Roslyn and the .NET runtime but omitted
+EfiGuard entirely. The omission was an oversight, not a position.
+
+This notice is the correction, published unprompted. EfiGuard is the work of
+Mattiwatti (https://github.com/Mattiwatti/EfiGuard), released under GPL-3.0, and
+the derived files are listed above. The binary artifact attached to that release
+has been withdrawn from distribution.
+
+No later version of this project contains EfiGuard-derived code.
+
+--------------------------------------------------------------------------------
+Third-party components
+--------------------------------------------------------------------------------
+
+EDK2 (SDK/EDK2)
+  Copyright (c) Intel Corporation and the TianoCore/EDK2 contributors.
+  BSD-2-Clause-Patent, per the SPDX-License-Identifier tags carried by the
+  headers themselves. Permissive; imposes no copyleft obligation.
+
+Zydis (SDK/Zydis) and Zycore (SDK/Zydis/dependencies/zycore)
+  Copyright (c) 2014-2024 Florian Bernd, Joel Hoener.
+  MIT, see SDK/Zydis/LICENSE and SDK/Zydis/dependencies/zycore/LICENSE.
+  Permissive; imposes no copyleft obligation.

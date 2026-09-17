@@ -1,0 +1,13 @@
+# Build directories
+build/
+out/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake

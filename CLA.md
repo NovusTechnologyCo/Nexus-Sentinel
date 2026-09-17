@@ -45,13 +45,22 @@ If Your Contribution includes material that is not Your original creation, You m
 
 You understand that the Maintainer is under no obligation to accept or include Your Contribution in the Project.
 
-### 6. Dual Licensing Acknowledgment
+### 6. Licensing Acknowledgment
+
+> **Note (September 2026).** The Project previously operated under a dual-licensing model
+> (AGPL v3 plus a commercial licence). That model has been retired. The Project is now
+> licensed per component -- Apache-2.0 for the framework, GPL-3.0 for the EfiGuard-derived
+> UEFI tree. See [LICENSES.md](LICENSES.md).
+>
+> Under Apache-2.0, inbound contributions are already covered by section 5 of that licence,
+> so this CLA is **no longer required** for the Apache-2.0 components. It is retained for
+> the historical record and for any future component where a signed grant is wanted.
 
 You acknowledge and agree that:
-- The Project operates under a dual-licensing model (AGPL v3 and Commercial).
-- Your Contributions may be distributed under the AGPL v3 license.
-- Your Contributions may also be included in commercially-licensed versions of the Project.
-- You will not receive additional compensation for commercial use of Your Contributions beyond the terms of this Agreement.
+- Your Contributions may be distributed under the licence applying to the component you
+  contribute to (Apache-2.0, or GPL-3.0 for `Nexus/UEFI/`).
+- You will not receive additional compensation for use of Your Contributions beyond the
+  terms of this Agreement.
 
 ### 7. How to Sign
 

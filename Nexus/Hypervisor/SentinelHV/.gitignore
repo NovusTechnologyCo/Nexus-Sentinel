@@ -1,0 +1,13 @@
+# Build outputs
+bin/
+obj/
+
+# Visual Studio
+*.user
+*.suo
+*.ncb
+*.sdf
+*.opensdf
+.vs/
+*.VC.db
+*.VC.opendb

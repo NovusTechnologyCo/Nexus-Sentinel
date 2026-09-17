@@ -1,0 +1,33 @@
+## @file
+# NexusBoot Package Declarations
+#
+# Copyright (c) 2026, Nexus Sentinel Project
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+##
+[Defines]
+  DEC_SPECIFICATION              = 0x0001001B
+  PACKAGE_NAME                   = NexusBootPkg
+  PACKAGE_GUID                   = 87654321-4321-4321-4321-CBA987654321
+  PACKAGE_VERSION                = 1.0
+
+[Includes]
+  Include
+  Include/Protocol
+  NexusBootDxe
+  SDK/Zydis/zycore
+  SDK/Zydis/include
+  SDK/Zydis/src
+  SDK/Zydis/msvc
+
+[Guids]
+  # Package GUID (keep as-is for now — fine unless publishing publicly)
+  gNexusBootPkgTokenSpaceGuid    = { 0x87654321, 0x4321, 0x4321, { 0x43, 0x21, 0xcb, 0xa9, 0x87, 0x65, 0x43, 0x21 } }
+
+[Protocols]
+  # Main driver protocol (your generated unique GUID — this is the important one!)
+  gNexusBootDriverProtocolGuid   = { 0xaa380a2f, 0x3ed7, 0x4354, { 0xab, 0xce, 0xa2, 0xe0, 0x83, 0xab, 0x94, 0xf9 } }
+
+  # Loader config protocol - used to pass settings from Loader.efi to NexusBootDxe.efi
+  # Avoids using UEFI variables that could be scanned for
+  gNexusLoaderConfigProtocolGuid = { 0xa7b2c3d4, 0xe5f6, 0x4718, { 0x9a, 0xbc, 0xde, 0xf0, 0x12, 0x34, 0x56, 0x78 } }

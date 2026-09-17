@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{A1B2C3D4-E5F6-7890-ABCD-EF0123456789}</ProjectGuid>
+    <TemplateGuid>{dd38f7fc-d7bd-488b-9242-7d8754cde80d}</TemplateGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
+    <Configuration>Debug</Configuration>
+    <Platform Condition="'$(Platform)' == ''">x64</Platform>
+    <RootNamespace>SentinelHV</RootNamespace>
+    <DriverType>WDM</DriverType>
+    <DriverTargetPlatform>Universal</DriverTargetPlatform>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <SpectreMitigation>false</SpectreMitigation>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <TargetVersion>Windows10</TargetVersion>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <SpectreMitigation>false</SpectreMitigation>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <!-- Debug output settings -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <OutDir>$(ProjectDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
+    <TargetName>SentinelHV</TargetName>
+    <TargetExt>.sys</TargetExt>
+    <EmbedManifest>false</EmbedManifest>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <!-- Release output settings -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
+    <OutDir>$(ProjectDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)\</IntDir>
+    <TargetName>SentinelHV</TargetName>
+    <TargetExt>.sys</TargetExt>
+    <EmbedManifest>false</EmbedManifest>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <!-- Debug compiler/linker -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>SHV_PLATFORM_NT;_DEBUG;_AMD64_;AMD64;NTDDI_VERSION=0x0A00000C;_WIN32_WINNT=0x0A00;WINVER=0x0A00;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\km;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <SpectreMitigation>false</SpectreMitigation>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <CallingConvention>StdCall</CallingConvention>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ControlFlowGuard>false</ControlFlowGuard>
+      <AdditionalOptions>/kernel %(AdditionalOptions)</AdditionalOptions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\km\x64\ntoskrnl.lib;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\km\x64\hal.lib;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\km\x64\BufferOverflowFastFailK.lib</AdditionalDependencies>
+      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
+      <SubSystem>Native</SubSystem>
+      <Driver>Driver</Driver>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>/NODEFAULTLIB /MANIFEST:NO %(AdditionalOptions)</AdditionalOptions>
+      <OutputFile>$(OutDir)$(TargetName).sys</OutputFile>
+      <GenerateManifest>false</GenerateManifest>
+    </Link>
+    <MASM>
+      <PreprocessorDefinitions>_AMD64_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <IncludePaths>C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\km\amd64;%(IncludePaths)</IncludePaths>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </MASM>
+    <Manifest>
+      <EnableDpiAwareness>false</EnableDpiAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <!-- Release compiler/linker -->
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>SHV_PLATFORM_NT;NDEBUG;_AMD64_;AMD64;NTDDI_VERSION=0x0A00000C;_WIN32_WINNT=0x0A00;WINVER=0x0A00;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(ProjectDir)include;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\km;C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\shared;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WarningLevel>Level3</WarningLevel>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <Optimization>MaxSpeed</Optimization>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <SpectreMitigation>false</SpectreMitigation>
+      <ExceptionHandling>false</ExceptionHandling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <CallingConvention>StdCall</CallingConvention>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <ControlFlowGuard>false</ControlFlowGuard>
+      <AdditionalOptions>/kernel %(AdditionalOptions)</AdditionalOptions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <CompileAs>CompileAsC</CompileAs>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\km\x64\ntoskrnl.lib;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\km\x64\hal.lib;C:\Program Files (x86)\Windows Kits\10\Lib\10.0.26100.0\km\x64\BufferOverflowFastFailK.lib</AdditionalDependencies>
+      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
+      <SubSystem>Native</SubSystem>
+      <Driver>Driver</Driver>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalOptions>/NODEFAULTLIB /MANIFEST:NO %(AdditionalOptions)</AdditionalOptions>
+      <OutputFile>$(OutDir)$(TargetName).sys</OutputFile>
+      <GenerateManifest>false</GenerateManifest>
+    </Link>
+    <MASM>
+      <PreprocessorDefinitions>_AMD64_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <IncludePaths>C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\km\amd64;%(IncludePaths)</IncludePaths>
+    </MASM>
+    <Manifest>
+      <EnableDpiAwareness>false</EnableDpiAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <!-- Source Files -->
+  <ItemGroup>
+    <ClCompile Include="src\entry.c" />
+    <ClCompile Include="src\vmx.c" />
+    <ClCompile Include="src\vmcs.c" />
+    <ClCompile Include="src\exit_dispatch.c" />
+    <ClCompile Include="src\exit_cpuid.c" />
+    <ClCompile Include="src\exit_msr.c" />
+    <ClCompile Include="src\exit_cr.c" />
+    <ClCompile Include="src\exit_vmcall.c" />
+    <ClCompile Include="src\exit_misc.c" />
+    <ClCompile Include="src\exit_ept.c" />
+    <ClCompile Include="src\ept.c" />
+    <ClCompile Include="src\extract_km_ciphers.c" />
+    <ClCompile Include="src\util.c" />
+    <ClCompile Include="src\platform_nt.c" />
+  </ItemGroup>
+  <!-- Header Files -->
+  <ItemGroup>
+    <ClInclude Include="include\shv.h" />
+    <ClInclude Include="include\shv_platform.h" />
+    <ClInclude Include="include\shv_vmx.h" />
+    <ClInclude Include="include\shv_arch.h" />
+    <ClInclude Include="include\shv_vmcs.h" />
+    <ClInclude Include="include\shv_exit.h" />
+    <ClInclude Include="include\shv_ept.h" />
+    <ClInclude Include="include\shv_cmos.h" />
+  </ItemGroup>
+  <!-- MASM Assembly Files -->
+  <ItemGroup>
+    <MASM Include="asm\vmx_asm.asm" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
+</Project>

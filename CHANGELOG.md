@@ -4,36 +4,29 @@ All notable changes to this project are documented in this file.
 
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+> **Scope note.** Nexus Sentinel began in 2024 as a memory-inspection and debugging
+> tool, and through 2025-2026 its hardware-identity and boot-level work was developed
+> and validated against a commercial anti-cheat driver as the test target --
+> that being the hardest available adversary for the techniques involved.
+>
+> The project's scope is now **malware analysis**: a framework for inspecting hostile
+> code safely. The hardware-identity subsystem serves analysis-environment hardening --
+> malware routinely fingerprints its host to detect sandboxes and analysis rigs, and
+> alters or suppresses its behaviour when it finds one. Presenting a consistent
+> synthetic hardware identity defeats that detection, and keeps the analyst's real
+> machine identity from reaching malware command-and-control.
+>
+> The techniques are the same; the application is not. Entries below dated before
+> 2026-09 describe capabilities as they were built. Detailed test results against
+> specific targets live in a private research repository, not here.
+
 ---
 
-## [2.0.0-alpha.4] - 2026-09-09
+## [Unreleased]
 
-### Added
-- **Software TPM 2.0 -- the command layer.** One command dispatcher shared by the
-  DXE and the in-kernel CRB servicer, covering the object, NV, PCR and capability
-  groups: `TPM2_CreatePrimary`, `TPM2_Create`, `TPM2_Load`, `TPM2_FlushContext`,
-  `TPM2_EvictControl`, `TPM2_PCR_Read`, `TPM2_PCR_Extend`, the `TPM2_NV_*` family,
-  and `TPM2_GetCapability` across `TPM_CAP_COMMANDS`, `TPM_CAP_ALGS`,
-  `TPM_CAP_PCRS`, `TPM_CAP_HANDLES` and the `PT_FIXED` / `PT_VAR` property groups.
-- **Cryptography written from the specification.** Big-integer arithmetic,
-  RSA-2048 key generation, KDFa, and AES with CFB mode. Each layer is tested
-  against an independent implementation rather than against itself.
-- **Persistent primary seeds.** The seeds live in NVRAM, so a primary key derived
-  before a reboot derives identically after one.
-- **A verification layer.** The implementation is queried for everything the
-  specification defines, not only for what the operating system asks, and the
-  answers are compared against a capture of genuine hardware.
+*No unreleased changes.*
 
-### Fixed
-- `tpm.sys` now binds. The ACPI TPM2 table revision was the blocker, not the
-  interface type.
-- Two response codes were wrong, and the test asserting them agreed with the
-  mistake.
-
-### Notes
-- Measured against a captured hardware reference throughout. Several hypotheses
-  recorded while the work was in progress were refuted by that reference; they
-  are corrected here rather than quietly dropped.
+---
 
 ## [2.0.0-alpha.3] - 2026-09-07
 
@@ -396,7 +389,6 @@ v2 base is installed from upstream.
   - Fixed `g_debuggers` static map bug (was declared in two functions)
 
 ---
-
 
 ## Releases before 1.0.0
 

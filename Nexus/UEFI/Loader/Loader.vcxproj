@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{0E4BAB8F-E6E0-47A8-8E99-8D451839967E}</ProjectGuid>
+    <!--
+      TargetName (2026-07-26) so the BUILD emits the deploy name directly. Previously the build
+      produced Loader.efi and the neutral name existed only in the manual ESP copy command, so
+      every rebuild reintroduced a rename step that had to be remembered. This also renames the
+      PDB, which matters: the PDB filename is embedded in the image's debug directory.
+      Keep in sync with mDriverPaths in Loader.c and with the Boot#### entry's FilePathList.
+    -->
+    <TargetName>PlatformBootMgr</TargetName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>$(DefaultPlatformToolset)</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <SpectreMitigation>false</SpectreMitigation>
+    <VcpkgEnabled>false</VcpkgEnabled>
+    <EnableStdModules>false</EnableStdModules>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="..\NexusBoot.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_PCD_GET_MODE_32_PcdProgressCodeOsLoaderLoad=0x3058000;_PCD_GET_MODE_32_PcdProgressCodeOsLoaderStart=0x3058001;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>UefiApplicationEntryPoint.lib;BaseMemoryLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>EFI Application</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Include\Protocol\NexusBoot.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Loader.c" />
+    <ClCompile Include="ManualMap.c" />
+    <ClCompile Include="VisualUefi.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ManualMap.h" />
+    <ClInclude Include="..\Include\PeRelocate.h" />
+  </ItemGroup>
+</Project>

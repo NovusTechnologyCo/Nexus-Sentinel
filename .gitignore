@@ -1,0 +1,153 @@
+# Local tooling and agent configuration. Machine-specific; carries absolute paths.
+.claude/
+CLAUDE.md
+/.mcp.json
+
+# ---------------------------------------------------------------------------
+# Build outputs
+# ---------------------------------------------------------------------------
+**/obj/
+# (!) bin/ AT ANY DEPTH, to match obj/ above. The explicit per-directory rules below
+# were each added after output leaked from a path nobody had listed yet.
+**/bin/
+
+# (!) SCOPED TO BUILD OUTPUT, NOT ANY DIRECTORY SO NAMED. A bare `**/Debug/` also matches
+# a SOURCE directory called `src/debug/` -- git's ignore matching is case-insensitive on
+# Windows -- and it silently excluded 1348 lines of real source (hardware breakpoints,
+# debug registers, LBR) from version control. They existed on one disk only and were
+# nearly lost when that tree was archived. Name output directories explicitly so a source
+# directory cannot collide with one.
+**/bin/Release/
+**/bin/Debug/
+**/obj/Release/
+**/obj/Debug/
+**/x64/Release/
+**/x64/Debug/
+**/Win32/Release/
+**/Win32/Debug/
+
+# Linker side-products that sit BESIDE source rather than in an output directory, so no
+# directory rule reaches them.
+*.exp
+*.ilk
+*.o
+*.obj
+*.ppu
+*.pch
+*.iobj
+*.ipdb
+
+# Per-component outputs. Import libraries under */lib/ are dependencies, not build
+# output, and stay tracked.
+/Nexus/bin/
+/Nexus/UEFI/build/
+/Nexus/Drivers/**/bin/
+/Nexus/Drivers/NexusCore/obj/
+/Nexus/Drivers/NexusTestModule/obj/
+/Nexus/Hypervisor/SentinelHV/bin/
+/Nexus/Native/NexusInject/*.exe
+/Nexus/Native/NexusWatchExternal/*.exe
+/Nexus/UserHook/bin/
+/Nexus/UserHook/*.lib
+/Nexus/Usermode/PlatformCtl/bin/
+/Nexus/Usermode/PlatformCtl/obj/
+/Nexus/Usermode/NexusTestTarget/bin/
+/Nexus/Usermode/NexusTestTarget/obj/
+/tools/tpm2_host_test/_build/
+
+# FlowTarget -- the known-answer test target for `trace flow`. The SOURCE is tracked, since
+# the expected counts are derived from it; the binaries are not. It rebuilds in seconds,
+# ASLR moves it every run so a committed copy proves nothing, and a stale .exe beside live
+# source is the shape that gets mistaken for the thing that was measured.
+/Nexus/Usermode/FlowTarget/*.exe
+/Nexus/Usermode/FlowTarget/*.pdb
+/Nexus/Usermode/FlowTarget/*.ilk
+
+# v1 components kept as reference material. The source is tracked; its build output is not.
+/Nexus/Engine/.vs/
+/Nexus/Engine/build/
+/Nexus/Engine/out/
+/Nexus/Tutorial/**/bin/
+/Nexus/Tutorial/**/obj/
+/Nexus/Tutorial/Native/*.exe
+/Nexus/Tutorial/Native/*.dll
+/Nexus/Tutorial/Native/*.lib
+/archive/v1/**/bin/Release/
+/archive/v1/**/bin/Debug/
+/archive/v1/**/obj/
+/archive/v1/**/.vs/
+/archive/v1/**/x64/Release/
+/archive/v1/**/*.pdb
+/archive/v1/UEFI/NexusDSEFix/lib/
+
+# ---------------------------------------------------------------------------
+# Visual Studio / editor / OS
+# ---------------------------------------------------------------------------
+*.vcxproj.user
+*.tlog
+*.vsidx
+*.ipch
+*.suo
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+.vs/
+.DS_Store
+
+# `nul` is a reserved device name on Windows. A shell redirect in Git Bash creates it as a
+# real file that git cannot index, which fails `git add -A` for the whole tree.
+nul
+
+# ---------------------------------------------------------------------------
+# Logs and generated data
+# ---------------------------------------------------------------------------
+*.log
+dbgview.log
+kernel_events_*.csv
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Disassembler databases -- regenerable from the binaries they describe.
+*.i64
+*.id0
+*.id1
+*.id2
+*.nam
+*.til
+
+# ---------------------------------------------------------------------------
+# Secrets -- never commit
+# ---------------------------------------------------------------------------
+*.pem
+*.key
+*.pfx
+artifacts/sb_keys/
+tmpclaude-*-cwd
+
+# ---------------------------------------------------------------------------
+# Not part of this repository
+# ---------------------------------------------------------------------------
+# Research material, captures and analysis output belong in the private research
+# repository. These rules are a safety net so a stray working copy cannot be committed
+# here by accident; none of these directories is part of the published tree.
+/RE/
+/logs/
+/archive/*
+!/archive/v1/
+!/archive/v1/**
+/artifacts/
+/captures/
+/perfimages/
+/cache/
+/patches/
+/versions/
+/dossier/
+/reference material/
+/Nexus/private/
+
+# The website lives in its own repository; a working copy may still sit on disk here.
+/website/

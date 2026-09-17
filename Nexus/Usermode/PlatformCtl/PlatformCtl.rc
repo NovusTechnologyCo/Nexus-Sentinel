@@ -1,0 +1,39 @@
+// PlatformCtl.rc -- version resource.
+//
+// IDENTITY IS DELIBERATE. This carries OUR OWN company name, not a real vendor's. An unsigned
+// binary claiming to be Microsoft or Dell is a LOUDER anomaly than one honestly attributed --
+// genuine vendor binaries are code-signed, so the mismatch stands out immediately.
+//
+// Nothing here contains a build path, machine name or user name. The EFI side leaked __FILE__,
+// the project name and the developer's username until MDEPKG_NDEBUG and /PDBALTPATH were fixed;
+// a usermode exe has the same exposure plus a PDB path, so keep this file free of all of it.
+
+#include <winver.h>
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION    2,0,0,0
+ PRODUCTVERSION 2,0,0,0
+ FILEFLAGSMASK  VS_FFI_FILEFLAGSMASK
+ FILEFLAGS      0x0L
+ FILEOS         VOS_NT_WINDOWS32
+ FILETYPE       VFT_APP
+ FILESUBTYPE    VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",      "Novus Technology"
+            VALUE "FileDescription",  "Platform Control Utility"
+            VALUE "FileVersion",      "2.0.0.0"
+            VALUE "InternalName",     "PlatformCtl"
+            VALUE "OriginalFilename", "PlatformCtl.exe"
+            VALUE "ProductName",      "Platform Support Tools"
+            VALUE "ProductVersion",   "2.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
